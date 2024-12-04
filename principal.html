@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Auth - Ejemplo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js"></script>
+</head>
+<body>
+
+
+
+  <!-- Modal de alerta -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="alertModalLabel">Mensaje</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p id="alertMessage">Aquí se mostrará el mensaje.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- Header -->
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <img src="images/logo-default-196x47.png" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="principal.html">Seguimiento</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="centros_de_reciclaje.html">Centros de Reciclaje</a>
+            </li>
+          </ul>
+          <button id="auth-button" class="btn btn-primary ms-3" data-bs-toggle="modal" data-bs-target="#authModal">Iniciar Sesión</button>
+          <button id="logout-button" class="btn btn-danger ms-3 d-none">Cerrar Sesión</button>
+        </div>
+      </div>
+    </nav>
+
+    <section>
+      <div class="text-center mb-5">
+        <h1><span class="section-title"></span>Quieres llevar un mejor control de tu reciclaje</h1>
+        <h5>Inicia secion para acceder a la tabla</h5>
+      </div>
+    </section>
+
+  </header>
+
+  <main class="container my-4">
+    <!-- Formulario para registrar reciclaje -->
+    <section class="mb-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h2 class="h5 mb-0">Registrar Material Reciclado</h2>
+        </div>
+        <div class="card-body">
+          <form id="recycling-form" class="row g-3">
+            <div class="col-md-6">
+              <label for="material" class="form-label">Material:</label>
+              <select id="material" class="form-select" required>
+                <option value="Papel">Papel</option>
+                <option value="Plástico">Plástico</option>
+                <option value="Cartón">Cartón</option>
+                <option value="Vidrio">Vidrio</option>
+                <option value="Metal">Metal</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="cantidad" class="form-label">Cantidad (kg):</label>
+              <input type="number" id="cantidad" class="form-control" min="1" placeholder="Ej. 10" required>
+            </div>
+            <div class="col-12 text-end">
+              <button type="submit" class="btn btn-success">Registrar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabla para mostrar el historial -->
+    <section>
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h2 class="h5 mb-0">Historial de Reciclaje</h2>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped align-middle" id="recycling-table">
+              <thead>
+                <tr>
+                  <th>Material</th>
+                  <th>Cantidad (kg)</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Las filas se generarán dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal para registro e inicio de sesión -->
+<div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="authModalLabel">Autenticación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="auth-options" class="mb-3 text-center">
+            <button id="btn-login" class="btn btn-outline-success">Iniciar Sesión</button>
+            <button id="btn-register" class="btn btn-outline-primary">Registrarse</button>
+          </div>
+          <form id="auth-form">
+            <div class="mb-3">
+              <label for="email" class="form-label">Correo Electrónico</label>
+              <input type="email" class="form-control" id="email" required>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Aceptar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+  // Función para mostrar el modal de alerta
+function showAlert(message, title = "Mensaje") {
+  const alertModal = new bootstrap.Modal(document.getElementById("alertModal"));
+  document.getElementById("alertMessage").innerText = message;
+  document.getElementById("alertModalLabel").innerText = title;
+  alertModal.show();
+}
+
+</script>
+<script>
+
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+  apiKey: "AIzaSyDFhHzRT0uSI4S0VezK7he3wJAcjxlSUXo",
+  authDomain: "miaplicacionweb-b30eb.firebaseapp.com",
+  projectId: "miaplicacionweb-b30eb",
+  storageBucket: "miaplicacionweb-b30eb.firebasestorage.app",
+  messagingSenderId: "542536231066",
+  appId: "1:542536231066:web:b3549433c4436ee08f5723"
+};
+
+  
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  
+    // Elementos del DOM
+    const authButton = document.getElementById('auth-button');
+    const logoutButton = document.getElementById('logout-button');
+    const authForm = document.getElementById('auth-form');
+    const authModalLabel = document.getElementById('authModalLabel');
+    const btnLogin = document.getElementById('btn-login');
+    const btnRegister = document.getElementById('btn-register');
+      // Elementos del DOM
+  const form = document.getElementById('recycling-form');
+  const materialSelect = document.getElementById('material');
+  const cantidadInput = document.getElementById('cantidad');
+  const tableBody = document.querySelector('#recycling-table tbody');
+  
+    let isRegistering = false; // Variable para alternar entre registro e inicio de sesión
+  
+    // Alternar entre registro e inicio de sesión
+    btnLogin.addEventListener('click', () => {
+      isRegistering = false;
+      authModalLabel.textContent = 'Iniciar Sesión';
+    });
+  
+    btnRegister.addEventListener('click', () => {
+      isRegistering = true;
+      authModalLabel.textContent = 'Registrarse';
+    });
+  
+    // Manejar envío del formulario
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+  
+      if (isRegistering) {
+        // Registrar usuario
+        auth.createUserWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            showAlert('Usuario registrado con éxito.');
+            const user = userCredential.user;
+            console.log('Datos del usuario registrado:', user);
+            // Cierra el modal
+            document.querySelector('#authModal .btn-close').click();
+          })
+          .catch((error) => {
+            console.error('Error al registrar usuario:', error.message);
+            showAlert(error.message);
+          });
+      } else {
+        // Iniciar sesión
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => {
+            showAlert('Inicio de sesión exitoso.');
+            // Cierra el modal
+            document.querySelector('#authModal .btn-close').click();
+          })
+          .catch((error) => {
+            console.error('Error al iniciar sesión:', error.message);
+            alert(error.message);
+          });
+      }
+    });
+  
+    // Cerrar sesión
+    logoutButton.addEventListener('click', () => {
+      auth.signOut()
+        .then(() => {
+          showAlert('Sesión cerrada.');
+        })
+        .catch((error) => {
+          console.error('Error al cerrar sesión:', error.message);
+          showAlert(error.message);
+        });
+    });
+  
+    // Estado de autenticación
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        authButton.classList.add('d-none');
+        logoutButton.classList.remove('d-none');
+        cargarHistorial(user.uid);
+      } else {
+        authButton.classList.remove('d-none');
+        logoutButton.classList.add('d-none');
+        tableBody.innerHTML = '';
+      }
+    });
+
+    // Función para cargar el historial desde Firestore
+  function cargarHistorial(uid) {
+    db.collection('recyclingHistory')
+      .where('userId', '==', uid)
+      .orderBy('timestamp', 'desc')
+      .get()
+      .then((snapshot) => {
+        tableBody.innerHTML = ''; // Limpiar la tabla
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          addRowToTable(data.material, data.cantidad, new Date(data.timestamp).toLocaleDateString());
+        });
+      })
+      .catch((error) => {
+        console.error('Error al cargar el historial:', error.message);
+      });
+  }
+
+  // Escuchar el evento de envío del formulario
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert('Debes iniciar sesión para registrar materiales reciclados.');
+      return;
+    }
+
+    const material = materialSelect.value;
+    const cantidad = parseFloat(cantidadInput.value);
+    const timestamp = Date.now();
+
+    // Validar cantidad
+    if (cantidad <= 0) {
+      showAlert('Por favor, ingresa una cantidad válida.');
+      return;
+    }
+
+    // Guardar datos en Firestore
+    db.collection('recyclingHistory')
+      .add({
+        userId: user.uid,
+        material,
+        cantidad,
+        timestamp
+      })
+      .then(() => {
+        alert('Material reciclado registrado con éxito.');
+        addRowToTable(material, cantidad, new Date(timestamp).toLocaleDateString());
+        form.reset(); // Limpiar el formulario
+      })
+      .catch((error) => {
+        console.error('Error al registrar el material:', error.message);
+        alert('Ocurrió un error al registrar el material.');
+      });
+  });
+
+  // Función para agregar una fila a la tabla
+  function addRowToTable(material, cantidad, fecha) {
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+      <td>${material}</td>
+      <td>${cantidad}</td>
+      <td>${fecha}</td>
+    `;
+    tableBody.appendChild(newRow);
+  }
+
+  </script>
+
+<script>
+    // Inicializar IndexedDB
+    const dbName = "RecyclingApp";
+    const storeName = "recyclingHistory";
+  
+    function initIndexedDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onerror = (event) => {
+          console.error("Error al abrir IndexedDB:", event.target.error);
+          reject(event.target.error);
+        };
+        request.onsuccess = (event) => {
+          resolve(event.target.result);
+        };
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+          }
+        };
+      });
+    }
+  
+    // Guardar datos en IndexedDB
+    async function saveToIndexedDB(data) {
+      const db = await initIndexedDB();
+      const transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+      store.add(data);
+    }
+  
+    // Obtener todos los datos de IndexedDB
+    async function getAllFromIndexedDB() {
+      const db = await initIndexedDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(storeName, "readonly");
+        const store = transaction.objectStore(storeName);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = (event) => reject(event.target.error);
+      });
+    }
+  
+    // Eliminar todos los datos de IndexedDB después de sincronizar
+    async function clearIndexedDB() {
+      const db = await initIndexedDB();
+      const transaction = db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+      store.clear();
+    }
+  
+    // Sincronizar datos con Firebase
+    async function syncWithFirestore() {
+      const materials = await getAllFromIndexedDB();
+      if (materials.length === 0) return; // No hay datos que sincronizar
+  
+      const uid = firebase.auth().currentUser?.uid;
+      if (!uid) return; // No se ha iniciado sesión
+  
+      const batch = db.batch();
+      materials.forEach((material) => {
+        const docRef = db.collection("recyclingHistory").doc(); // Crear un nuevo documento
+        batch.set(docRef, { ...material, userId: uid });
+      });
+  
+      try {
+        await batch.commit(); // Enviar los datos a Firestore
+        console.log("Datos sincronizados con Firebase.");
+        await clearIndexedDB(); // Limpiar los datos de IndexedDB
+      } catch (error) {
+        console.error("Error al sincronizar datos:", error.message);
+      }
+    }
+  
+    // Manejar el registro de materiales
+    async function handleMaterialRegistration(material, cantidad, timestamp) {
+      const uid = firebase.auth().currentUser?.uid;
+      const data = { material, cantidad, timestamp };
+  
+      if (navigator.onLine && uid) {
+        // Si hay conexión y el usuario está autenticado, guardar en Firebase
+        try {
+          await db.collection("recyclingHistory").add({ ...data, userId: uid });
+          console.log("Datos guardados en Firebase.");
+        } catch (error) {
+          console.error("Error al guardar en Firebase:", error.message);
+          await saveToIndexedDB(data); // Guardar en IndexedDB en caso de error
+        }
+      } else {
+        // Sin conexión o sin usuario autenticado, guardar en IndexedDB
+        console.warn("No hay conexión. Guardando en IndexedDB.");
+        await saveToIndexedDB(data);
+      }
+    }
+  
+    // Cargar historial (local y remoto)
+    async function loadRecyclingHistory() {
+      tableBody.innerHTML = ""; // Limpiar la tabla
+      const uid = firebase.auth().currentUser?.uid;
+  
+      // Primero cargar los datos de IndexedDB (offline)
+      const localData = await getAllFromIndexedDB();
+      localData.forEach((data) => {
+        addRowToTable(data.material, data.cantidad, new Date(data.timestamp).toLocaleDateString());
+      });
+  
+      // Si hay conexión, cargar datos de Firestore
+      if (navigator.onLine && uid) {
+        db.collection("recyclingHistory")
+          .where("userId", "==", uid)
+          .orderBy("timestamp", "desc")
+          .get()
+          .then((snapshot) => {
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              addRowToTable(data.material, data.cantidad, new Date(data.timestamp).toLocaleDateString());
+            });
+          })
+          .catch((error) => {
+            console.error("Error al cargar historial de Firebase:", error.message);
+          });
+      }
+    }
+  
+    // Detectar cambios en la conexión
+    window.addEventListener("online", async () => {
+      console.log("Conexión recuperada. Sincronizando datos...");
+      await syncWithFirestore();
+      await loadRecyclingHistory(); // Recargar historial
+    });
+  
+    window.addEventListener("offline", () => {
+      console.warn("Se perdió la conexión. Operando en modo offline.");
+    });
+  
+    // Manejar el evento de envío del formulario
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+  
+      const material = materialSelect.value;
+      const cantidad = cantidadInput.value;
+      const timestamp = Date.now(); // Marca de tiempo actual
+  
+      if (cantidad <= 0) {
+        alert("Por favor, ingresa una cantidad válida.");
+        return;
+      }
+  
+      await handleMaterialRegistration(material, cantidad, timestamp);
+      addRowToTable(material, cantidad, new Date(timestamp).toLocaleDateString());
+      form.reset();
+    });
+  
+    // Cargar historial al iniciar la página
+    document.addEventListener("DOMContentLoaded", loadRecyclingHistory);
+  </script>
+  
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

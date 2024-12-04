@@ -1,0 +1,226 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centros de Reciclaje Cercanos</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <img src="images/logo-default-196x47.png" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="principal.html">Seguimiento</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="centros_de_reciclaje.html">Centros de Reciclaje</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="container mt-4">
+    <div class="row">
+      <h1 class="text-center mb-4">Centros de Reciclaje Cercanos</h1>
+      <div class="col-md-4">
+        <div id="info" class="info-container">
+          <p class="text-center">Haz clic en un marcador para ver la información del centro de reciclaje.</p>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <button id="locate-btn" class="btn btn-primary w-100 mb-3">Localizar mi ubicación</button>
+        <div id="map"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let map, service, infoWindow, userLocation, marker;
+
+    function initMap() {
+        const defaultLocation = { lat: 19.432608, lng: -99.133209 }; // CDMX como ubicación inicial
+
+        // Recuperar ubicación guardada en LocalStorage
+        const savedLocation = JSON.parse(localStorage.getItem('lastMapLocation'));
+
+        // Validar la ubicación guardada o usar la predeterminada
+        const initialLocation = savedLocation && typeof savedLocation.lat === 'number' && typeof savedLocation.lng === 'number'
+            ? savedLocation
+            : defaultLocation;
+
+        // Configurar el mapa centrado en la ubicación inicial válida
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 15, // Zoom inicial ajustado
+            center: initialLocation,
+        });
+
+        infoWindow = new google.maps.InfoWindow();
+
+        // Crear marcador en la última ubicación guardada o predeterminada
+        marker = new google.maps.Marker({
+            position: initialLocation,
+            map: map,
+            draggable: true, // Permitir mover el marcador
+        });
+
+        // Escuchar movimiento del marcador
+        marker.addListener("dragend", saveLocation);
+
+        // Botón para localizar al usuario
+        document.getElementById("locate-btn").addEventListener("click", locateUser);
+
+        // Buscar centros de reciclaje cercanos a la ubicación inicial
+        findRecyclingCenters(initialLocation);
+    }
+
+    function locateUser() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+
+                    // Centrar el mapa en la ubicación del usuario
+                    map.setCenter(userLocation);
+
+                    // Mover el marcador a la ubicación del usuario
+                    marker.setPosition(userLocation);
+
+                    // Guardar ubicación en LocalStorage
+                    saveLocation();
+
+                    // Buscar centros de reciclaje cercanos
+                    findRecyclingCenters(userLocation);
+                },
+                (error) => {
+                    console.error("Error obteniendo la ubicación: ", error);
+                    alert("No se pudo obtener la ubicación. Asegúrate de permitir el acceso a la ubicación.");
+                }
+            );
+        } else {
+            alert("Geolocalización no soportada por tu navegador.");
+        }
+    }
+
+    function saveLocation() {
+        const position = marker.getPosition();
+        const location = {
+            lat: position.lat(),
+            lng: position.lng(),
+        };
+
+        // Guardar ubicación en LocalStorage
+        localStorage.setItem('lastMapLocation', JSON.stringify(location));
+        console.log('Ubicación guardada:', location);
+    }
+
+    function findRecyclingCenters(location) {
+        const request = {
+            location: location,
+            radius: 20000,
+            keyword: "centro de reciclaje recicladora",
+        };
+
+        service = new google.maps.places.PlacesService(map);
+        service.nearbySearch(request, (results, status) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+                results.forEach((place) => {
+                    createMarker(place);
+                });
+            } else {
+                alert("No se encontraron centros de reciclaje cercanos.");
+            }
+        });
+    }
+
+    function createMarker(place) {
+        const marker = new google.maps.Marker({
+            map: map,
+            position: place.geometry.location,
+            title: place.name || "Lugar sin nombre",
+        });
+
+        marker.addListener("click", () => {
+            const request = {
+                placeId: place.place_id,
+                fields: ["name", "vicinity", "formatted_phone_number", "opening_hours", "rating", "website"],
+            };
+
+            service.getDetails(request, (details, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    const content = `
+                        <div class="info-title">${details.name || "Nombre no disponible"}</div>
+                        <p><strong>Dirección:</strong> ${details.vicinity || "No disponible"}</p>
+                        <p><strong>Teléfono:</strong> ${details.formatted_phone_number || "No disponible"}</p>
+                        <p><strong>Calificación:</strong> ${details.rating || "No disponible"} ⭐</p>
+                        ${details.opening_hours ? formatOpeningHours(details.opening_hours) : ""}
+                        ${details.website ? `<p><strong>Website:</strong> <a href="${details.website}" target="_blank">${details.website}</a></p>` : ""}
+                    `;
+                    infoWindow.setContent(content);
+                    infoWindow.open(map, marker);
+                    document.getElementById("info").innerHTML = content;
+                } else {
+                    infoWindow.setContent("No hay información adicional para este lugar.");
+                    infoWindow.open(map, marker);
+                    document.getElementById("info").innerHTML = `<p>No hay información adicional para este lugar.</p>`;
+                }
+            });
+        });
+    }
+
+    function formatOpeningHours(openingHours) {
+        let hours = "<strong>Horarios:</strong><ul>";
+        openingHours.weekday_text.forEach((day) => {
+            hours += `<li>${day}</li>`;
+        });
+        hours += "</ul>";
+        return hours;
+    }
+  </script>
+  <script async
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsYq2GinFkWYBUdwAKRBTL8-hMoet5KJs&libraries=places&callback=initMap">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+<style>
+  #map {
+    height: 80vh;
+    width: 100%;
+    border-radius: 5px;
+  }
+  .info-container {
+    height: 80vh;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    background: #f8f9fa;
+  }
+  .info-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+</style>
+</html>

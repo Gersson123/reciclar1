@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Header</title>
+  <!-- Bootstrap CSS desde archivos locales -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS desde archivos locales -->
+<script src="js/bootstrap.bundle.min.js" defer></script>
+<!-- Vincular manifest.json -->
+<link rel="manifest" href="manifest.json">
+
+
+  <link rel="stylesheet" href="styles.css">
+  <style>
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <img src="images/logo-default-196x47.png" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="principal.html">Seguimiento</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="centros_de_reciclaje.html">Centros de Reciclaje</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <section class="py-5">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h1><span class="section-title"></span>Materiales reciclables más comunes</h1>
+      </div>
+      <div class="row align-items-center">
+        <!-- Image -->
+        <div class="col-lg-6">
+          <img src="/images/plastico.webp" alt="Envases de plástico" class="img-fluid rounded">
+        </div>
+        <!-- Text Content -->
+        <div class="col-lg-6">
+          <div class="content-box position-relative">
+            <h5>Envases de plástico</h5>
+            <p>
+              El plástico tarda muchos años en degradarse, por lo que es importante reducir su impacto limitando su consumo, reutilizando los envases siempre que se pueda y reciclándolos cuando ya no nos sean útiles.
+            </p>
+            <p>
+              Para reciclar el plástico correctamente, es fundamental depositar en el <strong>contenedor amarillo</strong> solo estos envases reciclables:
+            </p>
+            <ul>
+              <li>Botellas de plástico</li>
+              <li>Bote de detergente, champú, gel, etc.</li>
+              <li>Las bolsas de patatas</li>
+              <li>Tapas y tapones de plástico</li>
+              <li>Bolsas de plástico (excepto las bolsas de basura)</li>
+              <li>Tarrinas y tapas de yogurt</li>
+            </ul>
+            <!-- Decorative Circle -->
+            <div class="decorative-circle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5">
+    <div class="container">
+      <div class="row align-items-center">
+        <!-- Text Content (Now on the Left side) -->
+        <div class="col-lg-6">
+          <div class="content-box position-relative">
+            <h5>Latas</h5>
+            <p>
+              Este tipo de envase está siempre presente en nuestra cocina. ¿Quién no tiene una lata de refresco o de conservas en el refrigerador? Las latas están compuestas de aluminio y se pueden reciclar un número ilimitado de veces. ¡Al contenedor amarillo!
+            </p>
+
+            <!-- Decorative Circle -->
+            <div class="decorative-circle"></div>
+          </div>
+        </div>
+        <!-- Image (Now on the Right side) -->
+        <div class="col-lg-6">
+          <img src="/images/plastico.webp" alt="Envases de plástico" class="img-fluid rounded">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-5">
+    <div class="container">
+      <div class="row align-items-center">
+        <!-- Image -->
+        <div class="col-lg-6">
+          <img src="images/papel.jpg" alt="Envases de plástico" class="img-fluid rounded">
+        </div>
+        <!-- Text Content -->
+        <div class="col-lg-6">
+          <div class="content-box position-relative">
+            <h5>Envases de papel y cartón</h5>
+
+            <ul>
+              <li>Revistas</li>
+              <li>Períodicos viejos</li>
+              <li>Las bolsas de patatas</li>
+              <li>Cajas de cereal</li>
+              <li>Caja de zapatos</li>
+              <li>Papel de regalos</li>
+              <li>Cuadernos, libros, libretas, etc</li>
+            </ul>
+            <!-- Decorative Circle -->
+            <div class="decorative-circle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('/service-worker.js')
+            .then(registration => {
+                console.log('Service Worker registrado con éxito:', registration);
+            })
+            .catch(error => {
+                console.error('Error al registrar el Service Worker:', error);
+            });
+    });
+} else {
+    console.log('Service Worker no es soportado en este navegador.');
+}
+
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
